@@ -1,2 +1,2 @@
-# veritabani_odevi_eczane_kayit_sistemi
+# Eczane – İlaç Stok ve Reçete Kayıt Sistemi
 https://youtu.be/n3jK8EGc0hs
