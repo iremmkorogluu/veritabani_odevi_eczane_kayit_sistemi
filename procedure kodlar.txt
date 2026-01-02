@@ -1,0 +1,103 @@
+CREATE PROCEDURE HastaGecmisi
+@arananHastaNo int  
+AS
+BEGIN
+SELECT hastaID, reçete_tarihi 
+FROM reçete 
+WHERE hastaID = @arananHastaNo
+END
+GO
+
+CREATE PROCEDURE YeniIlacEkle
+@ilacNumarasi int,
+@ilacinAdi varchar(50),
+@barkodNo varchar(20),
+@fiyati decimal(10,2),
+@kategoriNo int
+AS
+BEGIN
+INSERT INTO ilac (ilacID, ilacAdi, barkod, birim_fiyat, kategoriID, tarih)
+VALUES (@ilacNumarasi, @ilacinAdi, @barkodNo, @fiyati, @kategoriNo, GETDATE())
+END
+GO
+
+ CREATE PROCEDURE ZamYap
+@Yuzde decimal(5,2)             
+AS
+BEGIN
+UPDATE ilac                      
+SET birim_fiyat = birim_fiyat * (1 + @Yuzde / 100)
+END
+GO
+
+CREATE PROCEDURE TarihiGecenler 
+AS
+BEGIN
+SELECT ilacID, son_kullanma_tarihi 
+FROM stok_hareket 
+WHERE son_kullanma_tarihi < GETDATE()
+END
+GO
+
+ CREATE PROCEDURE ReceteDetay @seçilenreçeteno int 
+AS
+BEGIN
+SELECT ilacID, adet 
+FROM reçete_detay 
+WHERE reçeteID = @seçilenreçeteno
+END
+GO 
+
+CREATE PROCEDURE FiyatSorgu @barkod varchar(50) 
+AS
+BEGIN
+SELECT ilacAdi, birim_fiyat 
+FROM ilac 
+WHERE barkod = @barkod
+END
+GO
+
+CREATE PROCEDURE UzmanDoktorlar @alan varchar(50) 
+AS
+BEGIN
+SELECT doktorad, doktorsoyad 
+FROM doktor 
+WHERE uzmanlık_alanı = @alan
+END
+GO
+
+CREATE PROCEDURE KritikStoklar 
+AS
+BEGIN
+SELECT ilacID, adet 
+FROM stok_hareket 
+WHERE adet < 20
+END
+GO
+
+CREATE PROCEDURE KategoriGetir @katID int 
+AS
+BEGIN
+SELECT ilacAdi 
+FROM ilac 
+WHERE kategoriID = @katID
+END
+GO
+
+CREATE PROCEDURE GunlukKazanc @sorgulanangun date 
+AS
+BEGIN
+SELECT SUM(toplam_tutar) 
+AS toplamciro
+FROM satıslar
+WHERE CAST(satıs_tarihi AS DATE) = @sorgulanangun
+END
+
+
+
+
+
+
+
+
+

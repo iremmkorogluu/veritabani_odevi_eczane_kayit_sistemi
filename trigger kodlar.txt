@@ -1,0 +1,127 @@
+CREATE TRIGGER StokDusur 
+ON reçete_detay 
+AFTER INSERT 
+AS
+BEGIN
+UPDATE stok_hareket 
+SET adet = adet - (SELECT adet FROM inserted) 
+WHERE ilacID = (SELECT ilacID FROM inserted) 
+END
+GO
+
+
+CREATE TRIGGER TarihEkle 
+ON reçete 
+AFTER INSERT 
+AS
+BEGIN
+UPDATE reçete 
+SET reçete_tarihi = GETDATE()
+WHERE reçeteID = (SELECT reçeteID FROM inserted)
+END
+GO
+
+
+CREATE TRIGGER IlacMesaj 
+ON ilac 
+AFTER INSERT 
+AS
+BEGIN 
+PRINT 'BAŞARILI: Yeni ilaç tanımlandı, artık satışa hazır.'
+END
+GO
+
+
+CREATE TRIGGER KritikStok 
+ON stok_hareket 
+AFTER UPDATE 
+AS
+BEGIN
+IF (SELECT adet FROM inserted) < 10 
+BEGIN
+PRINT 'DİKKAT: Stok seviyesi kritik! (10 adetin altına düştü)'
+END
+END
+GO
+
+
+
+CREATE TRIGGER FiyatFreni 
+ON ilac 
+AFTER UPDATE 
+AS
+BEGIN
+IF (SELECT birim_fiyat FROM inserted) <= 0
+BEGIN
+ROLLBACK TRANSACTION
+PRINT 'HATA: İlaç fiyatı 0 veya daha düşük olamaz!'
+END
+END
+GO
+
+
+
+CREATE TRIGGER IslemTarihiGuncelle 
+ON stok_hareket 
+AFTER UPDATE 
+AS
+BEGIN
+UPDATE stok_hareket 
+SET işlem_tarihi = GETDATE() 
+WHERE stokID = (SELECT stokID FROM inserted)
+END
+GO
+
+
+
+CREATE TRIGGER StokIade 
+ON reçete_detay 
+AFTER DELETE 
+AS
+BEGIN
+UPDATE stok_hareket 
+SET adet = adet + (SELECT adet FROM deleted)
+WHERE ilacID = (SELECT ilacID FROM deleted)
+END
+GO
+
+
+
+CREATE TRIGGER HastaKoru 
+ON hasta 
+AFTER DELETE 
+AS
+BEGIN 
+ROLLBACK TRANSACTION 
+PRINT 'GÜVENLİK: Reçete geçmişi olan hastaları silemezsiniz!' -- Eczacıya uyarı ver.
+END
+GO
+
+
+
+CREATE TRIGGER GelecekTarihEngelle 
+ON reçete 
+AFTER INSERT 
+AS
+BEGIN
+IF (SELECT reçete_tarihi FROM inserted) > GETDATE()
+BEGIN
+ROLLBACK TRANSACTION 
+PRINT 'HATA: Gelecek bir tarihe reçete oluşturulamaz!'
+END
+END
+GO
+
+
+CREATE TRIGGER BarkodKontrol 
+ON ilac 
+AFTER INSERT 
+AS
+BEGIN 
+IF (SELECT COUNT(*) FROM ilac WHERE barkod = (SELECT barkod FROM inserted)) > 1
+BEGIN
+ROLLBACK TRANSACTION 
+PRINT 'HATA: Bu barkod numarası zaten başka bir ilaca kayıtlı!'
+END
+END
+GO
